@@ -1,85 +1,73 @@
-const { mk } = require("../../Database/dataschema.js");
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 module.exports = {
-    name: "add",
-    alias: ["invite", "addmember"],
-    desc: "Add a user to the group",
-    category: "Group",
-    usage: "add <number>",
-    react: "➕",
+  name: "add",
+  alias: ["addnum", "invite"],
+  desc: "Add multiple members with Anti-Ban Logic 🛡️",
+  category: "Group",
+  usage: `add <numbers>`,
+  react: "📥",
+  isGroup: true,
+  isBotAdmin: true,
+  isAdmin: true,
 
-    start: async (Miku, m, { text, args, prefix, groupAdmin, botNumber, pushName }) => {
+  start: async (Miku, m, { text, prefix }) => {
+    if (!text) return m.reply(`Usage: ${prefix}add 91...`);
 
-        // Manual admin check (because core sometimes misdetects bot admin status)
-        const amIAdmin = groupAdmin.includes(botNumber);
+    const inputNumbers = text.split(/[,|\n|\s]/); 
+    const cleanedNumbers = inputNumbers.map(v => v.replace(/[^0-9]/g, "")).filter(v => v.length >= 10);
 
-        if (!amIAdmin) {
-            return m.reply(`❌ Aww... I’m not a group admin yet!  
-Please make me an admin first so I can add new members 🥺💖`);
-        }
+    if (cleanedNumbers.length === 0) return m.reply("❌ No valid numbers found!");
 
-        // Extracting target number
-        let userToAdd = "";
-        
-        if (m.quoted) {
-            userToAdd = m.quoted.sender;
-        } else {
-            if (!text) {
-                return m.reply(`⚠️ Please provide a phone number!  
-Example: *${prefix}add 919876543210* 💕`);
-            }
+    await m.reply(`⏳ Processing *${cleanedNumbers.length}* numbers. I will add them slowly to keep your number safe! 🛡️`);
 
-            let cleanNumber = text.replace(/[^0-9]/g, '');
-            if (cleanNumber.length < 5) {
-                return m.reply(`⚠️ This number doesn't look valid, cutie! 🧐`);
-            }
-
-            userToAdd = cleanNumber + "@s.whatsapp.net";
-        }
-
-        try {
-            // Try adding user
-            const response = await Miku.groupParticipantsUpdate(m.from, [userToAdd], "add");
-
-            // Privacy restriction (403)
-            if (response[0].status === '403') {
-
-                const groupLink = await Miku.groupInviteCode(m.from);
-                const inviteLink = `https://chat.whatsapp.com/${groupLink}`;
-                const groupMetadata = await Miku.groupMetadata(m.from);
-
-                let inviteMsg = `👋 Hey there!  
-*${pushName}* wants to add you to **"${groupMetadata.subject}"** 💬 
-
-But your privacy settings are blocking direct add.  
-So here’s your special invite link ✨👇  
-🔗 ${inviteLink}
-
-Hope to see you soon! 😊💖`;
-
-                await Miku.sendMessage(userToAdd, {
-                    text: inviteMsg,
-                    image: {url : botImage6} 
-                });
-
-                return m.reply(`⚠️ This user has *privacy settings* enabled.  
-I have sent them the group invite link in DM 💌✨`);
-            }
-
-            // Successfully added
-            else if (response[0].status === '200') {
-                return m.reply(`✅ Yay! The user has been added successfully 🎉🥳`);
-            }
-
-            // Other errors
-            else {
-                return m.reply(`❌ Oops! I couldn’t add this number.  
-Maybe they are not on WhatsApp or they blocked the group 😢`);
-            }
-
-        } catch (err) {
-            console.error(err);
-            return m.reply(`❌ Uh-oh! Something went wrong while adding the user 😭`);
-        }
+    const groupMetadata = await Miku.groupMetadata(m.from);
+    const groupName = groupMetadata.subject;
+    
+    let inviteLink = "";
+    try {
+        const code = await Miku.groupInviteCode(m.from);
+        inviteLink = `https://chat.whatsapp.com/${code}`;
+    } catch {
+        inviteLink = "(Invite link not available)";
     }
+
+    let success = 0;
+    let privacyCount = 0;
+    let failed = 0;
+
+    for (let num of cleanedNumbers) {
+      try {
+        const jid = `${num}@s.whatsapp.net`;
+        
+        // 🚀 Adding Participant
+        const response = await Miku.groupParticipantsUpdate(m.from, [jid], "add");
+
+        // 🔍 Status Analysis
+        const status = response[0]?.status;
+
+        if (status === "403") {
+          privacyCount++;
+          const inviteMsg = `*🎀 Hello Senpai! 🎀*\n\nI tried adding you to *${groupName}*, but your privacy settings restricted me. 🥺\n\n🔗 *Join here:* ${inviteLink}`;
+          await Miku.sendMessage(jid, { text: inviteMsg });
+        } else if (status === "200") {
+          success++;
+        } else {
+          failed++;
+        }
+
+        // 🛡️ ANTI-BAN DELAY (Increased to 5-7 seconds)
+        // Aapka VPS fast hai, isliye humein bot ko slow karna padega
+        const randomDelay = Math.floor(Math.random() * (7000 - 5000 + 1)) + 5000;
+        await sleep(randomDelay); 
+
+      } catch (err) {
+        console.log(`Failed for ${num}:`, err.message);
+        failed++;
+        await sleep(2000); // Error ke baad thoda break
+      }
+    }
+
+    await m.reply(`✅ *Batch Process Completed!*\n\n🟢 Added: ${success}\n🔒 Privacy DM: ${privacyCount}\n❌ Failed/Skipped: ${failed}\n\n_Safety delay was applied to prevent ban!_ 🛡️`);
+  }
 };
