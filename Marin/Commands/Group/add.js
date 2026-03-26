@@ -1,73 +1,104 @@
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
 module.exports = {
   name: "add",
-  alias: ["addnum", "invite"],
-  desc: "Add multiple members with Anti-Ban Logic 🛡️",
+  alias: ["addmember", "invite"],
+  desc: "Ultra safe slow add with invite fallback",
   category: "Group",
-  usage: `add <numbers>`,
-  react: "📥",
-  isGroup: true,
-  isBotAdmin: true,
-  isAdmin: true,
+  usage: "add 91xxx, 92xxx",
+  react: "➕",
 
-  start: async (Miku, m, { text, prefix }) => {
-    if (!text) return m.reply(`Usage: ${prefix}add 91...`);
+  start: async (Miku, m, { text, isAdmin, isBotAdmin, pushName }) => {
 
-    const inputNumbers = text.split(/[,|\n|\s]/); 
-    const cleanedNumbers = inputNumbers.map(v => v.replace(/[^0-9]/g, "")).filter(v => v.length >= 10);
+    if (!m.isGroup)
+      return Miku.sendMessage(m.from, { text: "❌ Ye command sirf group me use hota hai!" }, { quoted: m });
 
-    if (cleanedNumbers.length === 0) return m.reply("❌ No valid numbers found!");
+    if (!isAdmin)
+      return Miku.sendMessage(m.from, { text: "❌ Sirf admin use kar sakta hai!" }, { quoted: m });
 
-    await m.reply(`⏳ Processing *${cleanedNumbers.length}* numbers. I will add them slowly to keep your number safe! 🛡️`);
+    if (!isBotAdmin)
+      return Miku.sendMessage(m.from, { text: "❌ Bot ko admin banao pehle!" }, { quoted: m });
 
-    const groupMetadata = await Miku.groupMetadata(m.from);
-    const groupName = groupMetadata.subject;
-    
-    let inviteLink = "";
-    try {
-        const code = await Miku.groupInviteCode(m.from);
-        inviteLink = `https://chat.whatsapp.com/${code}`;
-    } catch {
-        inviteLink = "(Invite link not available)";
-    }
+    if (!text)
+      return Miku.sendMessage(m.from, { text: "⚠️ Numbers do!\nExample: .add 9199xxx, 9233xxx" }, { quoted: m });
 
-    let success = 0;
-    let privacyCount = 0;
-    let failed = 0;
+    // 🔥 Extract numbers
+    let numbers = text
+      .replace(/[^0-9]/g, " ")
+      .split(" ")
+      .filter(num => num.length >= 8);
 
-    for (let num of cleanedNumbers) {
+    if (numbers.length === 0)
+      return Miku.sendMessage(m.from, { text: "❌ Valid numbers nahi mile!" }, { quoted: m });
+
+    let users = numbers.map(num => num + "@s.whatsapp.net");
+
+    let success = [];
+    let failed = [];
+
+    // 🔗 Group invite link
+    let inviteLink = await Miku.groupInviteCode(m.from);
+    inviteLink = `https://chat.whatsapp.com/${inviteLink}`;
+
+    await Miku.sendMessage(m.from, {
+      text: `🚀 *Ultra Slow Adding Started...*\n\n👥 Total: ${users.length}\n⏳ Safe mode ON (anti-ban)\n\nPlease wait patiently...`
+    }, { quoted: m });
+
+    // ⏳ Delay function
+    const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
+    for (let i = 0; i < users.length; i++) {
+      let user = users[i];
+
       try {
-        const jid = `${num}@s.whatsapp.net`;
-        
-        // 🚀 Adding Participant
-        const response = await Miku.groupParticipantsUpdate(m.from, [jid], "add");
+        let res = await Miku.groupParticipantsUpdate(m.from, [user], "add");
 
-        // 🔍 Status Analysis
-        const status = response[0]?.status;
-
-        if (status === "403") {
-          privacyCount++;
-          const inviteMsg = `*🎀 Hello Senpai! 🎀*\n\nI tried adding you to *${groupName}*, but your privacy settings restricted me. 🥺\n\n🔗 *Join here:* ${inviteLink}`;
-          await Miku.sendMessage(jid, { text: inviteMsg });
-        } else if (status === "200") {
-          success++;
+        if (res[0].status === "200") {
+          success.push(user.split("@")[0]);
         } else {
-          failed++;
+          failed.push(user.split("@")[0]);
+
+          // 📩 Send invite message if privacy ON
+          try {
+            let inviteMsg = `🌸 Hello there!  
+
+✨ *You’ve been invited to join our awesome WhatsApp group!*  
+
+👥 A friendly and active community  
+🎉 Fun chats, updates & cool people  
+💬 No spam — just good vibes  
+
+💌 *Invited by:* ${pushName}  
+
+🔗 *Join here:*  
+${inviteLink}  
+
+Hope to see you inside 😊`;
+
+            await Miku.sendMessage(user, { text: inviteMsg });
+          } catch (e) {
+            // ignore DM fail
+          }
         }
 
-        // 🛡️ ANTI-BAN DELAY (Increased to 5-7 seconds)
-        // Aapka VPS fast hai, isliye humein bot ko slow karna padega
-        const randomDelay = Math.floor(Math.random() * (7000 - 5000 + 1)) + 5000;
-        await sleep(randomDelay); 
-
-      } catch (err) {
-        console.log(`Failed for ${num}:`, err.message);
-        failed++;
-        await sleep(2000); // Error ke baad thoda break
+      } catch (e) {
+        failed.push(user.split("@")[0]);
       }
+
+      // 🧠 ULTRA SAFE RANDOM DELAY (8–15 sec)
+      let randomDelay = 8000 + Math.floor(Math.random() * 7000);
+      await delay(randomDelay);
     }
 
-    await m.reply(`✅ *Batch Process Completed!*\n\n🟢 Added: ${success}\n🔒 Privacy DM: ${privacyCount}\n❌ Failed/Skipped: ${failed}\n\n_Safety delay was applied to prevent ban!_ 🛡️`);
+    let result = `➕ *Add Process Completed*\n\n`;
+
+    if (success.length > 0)
+      result += `✅ Added Successfully:\n${success.map(n => "• " + n).join("\n")}\n\n`;
+
+    if (failed.length > 0)
+      result += `📩 Invite Sent (Privacy ON / Failed):\n${failed.map(n => "• " + n).join("\n")}\n\n`;
+
+    result += `🛡️ Ultra Safe Mode Enabled\n⏳ Slow adding used to reduce ban risk`;
+
+    Miku.sendMessage(m.from, { text: result }, { quoted: m });
+
   }
 };
