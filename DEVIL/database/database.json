@@ -18,10 +18,16 @@
       },
       "120363424373439635@newsletter": {
         "premiumExpiry": 0
+      },
+      "917858059043@s.whatsapp.net": {
+        "premiumExpiry": 0
       }
     },
     "settings": {
       "96876465802@s.whatsapp.net": {
+        "antiswview": false
+      },
+      "917858059043@s.whatsapp.net": {
         "antiswview": false
       }
     },
