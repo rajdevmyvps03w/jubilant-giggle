@@ -183,7 +183,7 @@ async function scrapeShoobCards() {
 
 		const allCards = [];
 
-		for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+		for (let pageNum = 911; pageNum <= totalPages; pageNum++) {
 			console.log(`\n📄 Processing Page ${pageNum}/${totalPages}...`);
 
 			if (pageNum > 1) {
