@@ -26,7 +26,6 @@ jobs:
       with:
         token: ${{ secrets.PAT_TOKEN }}
         fetch-depth: 0
-        path: 'vps'
 
     - name: 🟢 Setup Node.js 22
       uses: actions/setup-node@v3
@@ -102,7 +101,6 @@ jobs:
 
     # --- 🚀 ADVANCED MULTI-BOT ENGINE ---
     - name: 🚀 Auto-Detect & Start All Bots (PM2)
-      working-directory: ./vps
       env:
         MONGODB: ${{ secrets.MONGODB }}
         MODS: ${{ secrets.MODS }}
@@ -182,29 +180,42 @@ jobs:
       env:
         DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
       run: |
-        # 1. Hide Path & GitHub Name
-        echo "export PS1='\[\033[01;32m\]VPS-By-Stenx \[\033[01;34m\]❯ \[\033[00m\] '" >> ~/.bashrc
-        
-        # 2. Go to the clean folder
-        cd vps
+        # Prompt configuration to hide GitHub Path/Name
+        echo "export PS1='\[\033[01;32m\]MARIN-VPS \[\033[01;34m\]❯ \[\033[00m\] '" >> ~/.bashrc
+        export PS1='\[\033[01;32m\]MARIN-VPS \[\033[01;34m\]❯ \[\033[00m\] '
         
         set +e 
+        
         for i in {1..15}; do
            tmate -S /tmp/tmate.sock kill-session 2>/dev/null || true
            tmate -S /tmp/tmate.sock new-session -d
            tmate -S /tmp/tmate.sock wait tmate-ready
            sleep 5
+           
            SSH_MSG=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}' 2>/dev/null)
+           
            if [[ "$SSH_MSG" == *"tmate.io"* ]]; then
-              PAYLOAD=$(jq -n --arg ssh "$SSH_MSG" --arg fileUrl "$FILE_MANAGER_URL" --arg btopUrl "$BTOP_URL" --arg bots "$ACTIVE_BOTS" '{content: "✨ 🎀 **VPS 𝐃𝐚𝐬𝐡𝐛𝐨𝐚𝐫𝐝** 🎀 ✨\n\n✅ **𝐒𝐭𝐚𝐭𝐮𝐬:** `Online` 🟢\n🤖 **𝐀𝐜𝐭𝐢𝐯𝐞 𝐁𝐨𝐭𝐬:** `\($bots)`\n\n📂 **𝐅𝐢𝐥𝐞 𝐌𝐚𝐧𝐚𝐠𝐞𝐫:** \($fileUrl)\n📊 **𝐕𝐏𝐒 𝐇𝐞𝐚𝐥𝐭𝐡:** \($btopUrl)\n💻 **𝐒𝐒𝐇 𝐓𝐞𝐫𝐦𝐢𝐧𝐚𝐥:** `\($ssh)`\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n✨ **💡 𝐓𝐢𝐩:** _Terminal path hidden!_ "}')
+              
+              PAYLOAD=$(jq -n \
+                --arg ssh "$SSH_MSG" \
+                --arg fileUrl "$FILE_MANAGER_URL" \
+                --arg btopUrl "$BTOP_URL" \
+                --arg bots "$ACTIVE_BOTS" \
+                '{content: "✨ 🎀 **VPS 𝐃𝐚𝐬𝐡𝐛𝐨𝐚𝐫𝐝** 🎀 ✨\n\n✅ **𝐒𝐭𝐚𝐭𝐮𝐬:** `Online` 🟢\n🤖 **𝐀𝐜𝐭𝐢𝐯𝐞 𝐁𝐨𝐭𝐬:** `\($bots)`\n\n📂 **𝐅𝐢𝐥𝐞 𝐌𝐚𝐧𝐚𝐠𝐞𝐫:** \($fileUrl)\n📊 **𝐕𝐏𝐒 𝐇𝐞𝐚𝐥𝐭𝐡:** \($btopUrl)\n💻 **𝐒𝐒𝐇 𝐓𝐞𝐫𝐦𝐢𝐧𝐚𝐥:** `\($ssh)`\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n🛠️ **𝐕𝐏𝐒 𝐌𝐀𝐍𝐀𝐆𝐄𝐌𝐄𝐍𝐓 𝐆𝐔𝐈𝐃𝐄** 🛠️\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💾 **𝐒𝐚𝐯𝐞 𝐂𝐡𝐚𝐧𝐠𝐞𝐬:** `savecode` \n_(⚠ Required before session ends to save data to GitHub!)_\n\n📦 **𝐔𝐧𝐳𝐢𝐩 𝐁𝐨𝐭:** `unzip \"filename.zip\"` \n_(Use this to extract your uploaded bot files)_\n\n🗑️ **𝐂lean 𝐉𝐮𝐧𝐤:** `rm \"filename.zip\"` \n_(Always delete zip files after unzip to save space)_\n\n📝 **𝐕𝐢𝐞𝐰 𝐋𝐨𝐠𝐬:** `pm2 logs Name` \n_(Check QR code or bot errors live)_\n\n🔄 **𝐑𝐞𝐬𝐭𝐚𝐫𝐭:** `pm2 restart Name` \n_(Apply new code changes immediately)_\n\n🛑 **𝐒𝐭𝐨𝐩 𝐁𝐨𝐭:** `pm2 stop Name` \n_(To turn off a specific bot)_\n\n📈 **𝐒𝐭𝐚𝐭𝐮𝐬:** `pm2 status` \n_(To see all running bots list)_\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n✨ **💡 𝐓𝐢𝐩:** _If  You Have Any Issue Connect With Owner https://wa.me/918434573266 !_ "}')
+              
               curl -H "Content-Type: application/json" -d "$PAYLOAD" $DISCORD_WEBHOOK
+              
               echo "RESTART_SAFE=true" >> $GITHUB_ENV
+              
               for m in {1..36}; do sleep 300; done
+              
               savecode || true
               exit 0
            fi
            sleep 5
         done
+        
+        curl -H "Content-Type: application/json" -d '{"content": "❌ **ERROR:** Tmate Server failed. Auto-restart paused."}' $DISCORD_WEBHOOK
         exit 1
 
     - name: 🧟 Respawn Zombie
