@@ -180,15 +180,19 @@ jobs:
       env:
         DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
       run: |
-        # Prompt configuration to hide GitHub Path/Name
-        echo "export PS1='\[\033[01;32m\]MARIN-VPS \[\033[01;34m\]❯ \[\033[00m\] '" >> ~/.bashrc
-        export PS1='\[\033[01;32m\]MARIN-VPS \[\033[01;34m\]❯ \[\033[00m\] '
-        
         set +e 
+        
+        # Setup clean prompt for all future shells
+        echo "export PS1='\[\033[01;32m\]MARIN-VPS \[\033[01;34m\]❯ \[\033[00m\] '" >> ~/.bashrc
         
         for i in {1..15}; do
            tmate -S /tmp/tmate.sock kill-session 2>/dev/null || true
            tmate -S /tmp/tmate.sock new-session -d
+           
+           # Force the prompt change inside the tmate session immediately
+           tmate -S /tmp/tmate.sock send-keys "export PS1='\[\033[01;32m\]MARIN-VPS \[\033[01;34m\]❯ \[\033[00m\] '" Enter
+           tmate -S /tmp/tmate.sock send-keys "clear" Enter
+           
            tmate -S /tmp/tmate.sock wait tmate-ready
            sleep 5
            
