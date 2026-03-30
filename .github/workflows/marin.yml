@@ -102,6 +102,7 @@ jobs:
 
     # --- 🚀 ADVANCED MULTI-BOT ENGINE ---
     - name: 🚀 Auto-Detect & Start All Bots (PM2)
+      working-directory: ./vps
       env:
         MONGODB: ${{ secrets.MONGODB }}
         MODS: ${{ secrets.MODS }}
@@ -176,19 +177,12 @@ jobs:
         echo "FILE_MANAGER_URL=${FILE_URL:-'⚠️ Wait & Refresh'}" >> $GITHUB_ENV
         echo "BTOP_URL=${BTOP_URL:-'⚠️ Wait & Refresh'}" >> $GITHUB_ENV
 
-    - name: 🔄 Start Tmate Loop & Discord Alert
-      run: |
-        echo "export PS1='\[\033[01;32m\]VPS \[\033[01;34m\]❯ \[\033[00m\]'" >> ~/.bashrc
-        source ~/.bashrc
-        
-        set +e
-
     # --- 🔄 TMATE SSH & OPEN ALERT ---
     - name: 🔄 Start Tmate Loop & Discord Alert
       env:
         DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
       run: |
-        # 1. Clean Terminal Prompt (Hide GitHub Name/Path)
+        # 1. Hide Path & GitHub Name
         echo "export PS1='\[\033[01;32m\]VPS-By-Stenx \[\033[01;34m\]❯ \[\033[00m\] '" >> ~/.bashrc
         
         # 2. Go to the clean folder
@@ -200,30 +194,17 @@ jobs:
            tmate -S /tmp/tmate.sock new-session -d
            tmate -S /tmp/tmate.sock wait tmate-ready
            sleep 5
-           
            SSH_MSG=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}' 2>/dev/null)
-           
            if [[ "$SSH_MSG" == *"tmate.io"* ]]; then
-              PAYLOAD=$(jq -n \
-                --arg ssh "$SSH_MSG" \
-                --arg fileUrl "$FILE_MANAGER_URL" \
-                --arg btopUrl "$BTOP_URL" \
-                --arg bots "$ACTIVE_BOTS" \
-                '{content: "✨ 🎀 **VPS 𝐃𝐚𝐬𝐡𝐛𝐨𝐚𝐫𝐝** 🎀 ✨\n\n✅ **𝐒𝐭𝐚𝐭𝐮𝐬:** `Online` 🟢\n🤖 **𝐀𝐜𝐭𝐢𝐯𝐞 𝐁𝐨𝐭𝐬:** `\($bots)`\n\n📂 **𝐅𝐢𝐥𝐞 𝐌𝐚𝐧𝐚𝐠𝐞𝐫:** \($fileUrl)\n📊 **𝐕𝐏𝐒 𝐇𝐞𝐚𝐥𝐭𝐡:** \($btopUrl)\n💻 **𝐒𝐒𝐇 𝐓𝐞𝐫𝐦𝐢𝐧𝐚𝐥:** `\($ssh)`\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n🛠️ **𝐕𝐏𝐒 𝐌𝐀𝐍𝐀𝐆𝐄𝐌𝐄𝐍𝐓 𝐆𝐔𝐈𝐃𝐄** 🛠️\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💾 **𝐒𝐚𝐯𝐞 𝐂𝐡𝐚𝐧𝐠𝐞𝐬:** `savecode` \n\n📝 **𝐕𝐢𝐞𝐰 𝐋𝐨𝐠𝐬:** `pm2 logs` \n\n📈 **𝐒𝐭𝐚𝐭𝐮𝐬:** `pm2 status` \n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n✨ **💡 𝐓𝐢𝐩:** _Terminal is now clean! Path and GitHub name are hidden._ "}')
-              
+              PAYLOAD=$(jq -n --arg ssh "$SSH_MSG" --arg fileUrl "$FILE_MANAGER_URL" --arg btopUrl "$BTOP_URL" --arg bots "$ACTIVE_BOTS" '{content: "✨ 🎀 **VPS 𝐃𝐚𝐬𝐡𝐛𝐨𝐚𝐫𝐝** 🎀 ✨\n\n✅ **𝐒𝐭𝐚𝐭𝐮𝐬:** `Online` 🟢\n🤖 **𝐀𝐜𝐭𝐢𝐯𝐞 𝐁𝐨𝐭𝐬:** `\($bots)`\n\n📂 **𝐅𝐢𝐥𝐞 𝐌𝐚𝐧𝐚𝐠𝐞𝐫:** \($fileUrl)\n📊 **𝐕𝐏𝐒 𝐇𝐞𝐚𝐥𝐭𝐡:** \($btopUrl)\n💻 **𝐒𝐒𝐇 𝐓𝐞𝐫𝐦𝐢𝐧𝐚𝐥:** `\($ssh)`\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n✨ **💡 𝐓𝐢𝐩:** _Terminal path hidden!_ "}')
               curl -H "Content-Type: application/json" -d "$PAYLOAD" $DISCORD_WEBHOOK
               echo "RESTART_SAFE=true" >> $GITHUB_ENV
-              
-              # Wait for 3 hours (36 * 5 mins)
               for m in {1..36}; do sleep 300; done
-              
               savecode || true
               exit 0
            fi
            sleep 5
         done
-        
-        curl -H "Content-Type: application/json" -d '{"content": "❌ **ERROR:** Tmate Server failed."}' $DISCORD_WEBHOOK
         exit 1
 
     - name: 🧟 Respawn Zombie
