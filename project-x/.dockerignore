@@ -1,0 +1,26 @@
+# Dependencies — reinstalled inside the image
+node_modules
+
+# Card media cache — mount as a volume if you want cache to persist
+cache
+
+# Logs
+*.log
+plugin-errors.log
+
+# Dev/dump files
+dump.js
+repo_dump.txt
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Local env overrides
+.env
+.env.*
