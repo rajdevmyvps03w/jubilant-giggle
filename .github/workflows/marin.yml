@@ -178,12 +178,17 @@ jobs:
       run: |
         set +e 
         
+        # Permanent Bash Prompt Hack
+        echo "PS1='\[\033[01;32m\]MARIN-VPS \[\033[01;34m\]❯ \[\033[00m\] '" >> ~/.bashrc
+        echo "export PS1" >> ~/.bashrc
+        
         for i in {1..15}; do
            tmate -S /tmp/tmate.sock kill-session 2>/dev/null || true
            tmate -S /tmp/tmate.sock new-session -d
            
-           # Force terminal to hide path and user info immediately upon connection
-           tmate -S /tmp/tmate.sock send-keys "export PS1='\[\033[01;32m\]MARIN-VPS \[\033[01;34m\]❯ \[\033[00m\] '" Enter
+           # Force terminal to update prompt and hide path immediately
+           sleep 2
+           tmate -S /tmp/tmate.sock send-keys "PS1='\[\033[01;32m\]MARIN-VPS \[\033[01;34m\]❯ \[\033[00m\] '" Enter
            tmate -S /tmp/tmate.sock send-keys "clear" Enter
            
            tmate -S /tmp/tmate.sock wait tmate-ready
