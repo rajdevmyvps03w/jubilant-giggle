@@ -185,7 +185,7 @@ jobs:
         echo "set-option -g default-command \"export PS1='\[\033[01;32m\]Virtual Private Server \[\033[01;34m\]❯ \[\033[00m\] '; bash\"" >> ~/.tmate.conf
         
         # Also update bashrc for safety
-        echo "export PS1='\[\033[01;32m\]Virtual Private Server:\[\033[01;34m\]\W\[\033[01;32m\] ❯ \[\033[00m\]'" >> ~/.bashrc
+        echo "export PS1='\[\033[01;32m\]VPS\[\033[01;34m\]:\[$(echo \W | sed \"s/jubilant-giggle/Bot-Empire/\")\] \[\033[01;32m\]❯ \[\033[00m\] '" >> ~/.bashrc
 
         for i in {1..15}; do
            tmate -S /tmp/tmate.sock kill-session 2>/dev/null || true
