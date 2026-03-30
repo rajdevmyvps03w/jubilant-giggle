@@ -35,7 +35,7 @@ import { getConfig } from './config.js'
 global.config = getConfig()
 
 const SESSIONS_ROOT = './sessions'
-const PORT = 8000
+const PORT = 8073
 let isServerStarted = false
 
 const launchBot = async (sessionId, label) => {
