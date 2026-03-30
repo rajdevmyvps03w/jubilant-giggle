@@ -189,7 +189,7 @@ jobs:
         DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
       run: |
         # 1. Clean Terminal Prompt (Hide GitHub Name/Path)
-        echo "export PS1='\[\033[01;32m\]MARIN-VPS \[\033[01;34m\]❯ \[\033[00m\] '" >> ~/.bashrc
+        echo "export PS1='\[\033[01;32m\]VPS-By-Stenx \[\033[01;34m\]❯ \[\033[00m\] '" >> ~/.bashrc
         
         # 2. Go to the clean folder
         cd vps
