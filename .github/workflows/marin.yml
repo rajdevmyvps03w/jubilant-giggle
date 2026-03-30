@@ -22,18 +22,18 @@ jobs:
 
     steps:
     - name: 📂 Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         token: ${{ secrets.PAT_TOKEN }}
         fetch-depth: 0
 
     - name: 🟢 Setup Node.js 22
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '22'
 
     - name: 🥟 Setup Bun Runtime
-      uses: oven-sh/setup-bun@v1
+      uses: oven-sh/setup-bun@v2
       with:
         bun-version: latest
 
@@ -182,10 +182,10 @@ jobs:
         
         # 🛡️ THE FINAL PROMPT FIX: Create a tmate config to force the clean look
         echo "set -g status off" > ~/.tmate.conf
-        echo "set-option -g default-command \"export PS1='\[\033[01;32m\]MARIN-VPS \[\033[01;34m\]❯ \[\033[00m\] '; bash\"" >> ~/.tmate.conf
+        echo "set-option -g default-command \"export PS1='\[\033[01;32m\]Virtual Private Server \[\033[01;34m\]❯ \[\033[00m\] '; bash\"" >> ~/.tmate.conf
         
         # Also update bashrc for safety
-        echo "export PS1='\[\033[01;32m\]MARIN-VPS \[\033[01;34m\]❯ \[\033[00m\] '" >> ~/.bashrc
+        echo "export PS1='\[\033[01;32m\]Virtual Private Server \[\033[01;34m\]❯ \[\033[00m\] '" >> ~/.bashrc
 
         for i in {1..15}; do
            tmate -S /tmp/tmate.sock kill-session 2>/dev/null || true
@@ -221,7 +221,7 @@ jobs:
 
     - name: 🧟 Respawn Zombie
       if: env.RESTART_SAFE == 'true'
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       with:
         github-token: ${{ secrets.PAT_TOKEN }}
         script: |
