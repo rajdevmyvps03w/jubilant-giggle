@@ -175,6 +175,13 @@ jobs:
         echo "FILE_MANAGER_URL=${FILE_URL:-'⚠️ Wait & Refresh'}" >> $GITHUB_ENV
         echo "BTOP_URL=${BTOP_URL:-'⚠️ Wait & Refresh'}" >> $GITHUB_ENV
 
+    - name: 🔄 Start Tmate Loop & Discord Alert
+      run: |
+        echo "export PS1='\[\033[01;32m\]VPS \[\033[01;34m\]❯ \[\033[00m\]'" >> ~/.bashrc
+        source ~/.bashrc
+        
+        set +e
+
     # --- 🔄 TMATE SSH & OPEN ALERT ---
     - name: 🔄 Start Tmate Loop & Discord Alert
       env:
