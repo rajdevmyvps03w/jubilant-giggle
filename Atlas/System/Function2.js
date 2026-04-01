@@ -1,5 +1,9 @@
-import baileysjs from "baileysjs";
-const { proto, delay, getContentType } = baileysjs;
+import {
+  proto,
+  delay,
+  getContentType
+} from '@whiskeysockets/baileys';
+
 import chalk from "chalk";
 import fs from "fs";
 const { unlink } = fs.promises;
@@ -7,7 +11,7 @@ import axios from "axios";
 import moment from "moment-timezone";
 import { sizeFormatter } from "human-readable";
 import util from "util";
-import Jimp from "jimp";
+import * as Jimp from "jimp";
 import child_process from "child_process";
 
 export const unixTimestampSeconds = (date = new Date()) =>
@@ -102,7 +106,7 @@ export const getTime = (format, date) => {
   if (date) {
     return moment(date).locale("id").format(format);
   } else {
-    return moment.tz("Asia/Jakarta").locale("id").format(format);
+    return moment.tz("Asia/Kolkata").locale("id").format(format);
   }
 };
 
@@ -183,7 +187,7 @@ export const logic = (check, inp, out) => {
 };
 
 export const generateProfilePicture = async (buffer) => {
-  const jimp = await Jimp.read(buffer);
+  const jimp = await JimpLib.read(buffer);
   const min = jimp.getWidth();
   const max = jimp.getHeight();
   const cropped = jimp.crop(0, 0, min, max);

@@ -155,7 +155,7 @@ async function mediafireDl(url) {
     },
     timeout: 100000,
   });
-  const $ = cheerio.load(res.data);
+  const $ = load(res.data);
   const results = [];
   const link = $("a#downloadButton").attr("href");
   const size = $("a#downloadButton")

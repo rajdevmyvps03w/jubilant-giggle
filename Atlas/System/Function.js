@@ -1,5 +1,5 @@
 import axios from "axios";
-import cheerio from "cheerio";
+import * as cheerio from "cheerio";
 import BodyForm from "form-data";
 import fs from "fs";
 
@@ -42,7 +42,7 @@ export const webp2mp4File = async (path) => {
     })
       .then(({ data }) => {
         const bodyFormThen = new BodyForm();
-        const $ = cheerio.load(data);
+        const $ = load(data);
         const file = $('input[name="file"]').attr("value");
         bodyFormThen.append("file", file);
         bodyFormThen.append("convert", "Convert WebP to MP4!");
@@ -55,7 +55,7 @@ export const webp2mp4File = async (path) => {
           },
         })
           .then(({ data }) => {
-            const $ = cheerio.load(data);
+            const $ = load(data);
             const result =
               "https:" +
               $("div#output > p.outfile > video > source").attr("src");

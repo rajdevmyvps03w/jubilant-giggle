@@ -31,9 +31,9 @@
     "@fantox01/lyrics-scraper": "^3.0.1",
     "@hapi/boom": "^10.0.1",
     "@napi-rs/canvas": "^0.1.97",
+    "@rodrigogs/baileys-store": "^2.0.0",
     "@whiskeysockets/baileys": "git+https://github.com/WhiskeySockets/Baileys.git",
     "axios": "^1.14.0",
-    "baileysjs": "^6.2.2",
     "canvacord": "^6.0.4",
     "chalk": "^5.6.2",
     "cheerio": "^1.2.0",
@@ -59,6 +59,7 @@
     "human-readable": "^0.2.1",
     "hxz-api": "^1.0.1",
     "jimp": "^1.6.0",
+    "link-preview-js": "^3.2.0",
     "moment-timezone": "^0.6.1",
     "mongoose": "^9.3.3",
     "mumaker": "^2.0.0",
@@ -83,13 +84,11 @@
   },
   "devDependencies": {
     "jimp": "^1.6.0",
-    "link-preview-js": "^4.0.0",
     "qrcode-terminal": "^0.12.0"
   },
   "peerDependencies": {
     "@adiwajshing/keyed-db": "^0.2.4",
-    "jimp": "^0.16.1",
-    "link-preview-js": "^3.0.0",
+    "jimp": "^1.6.0",
     "qrcode-terminal": "^0.12.0"
   },
   "peerDependenciesMeta": {

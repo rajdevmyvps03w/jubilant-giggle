@@ -1,12 +1,13 @@
 import "./Configurations.js";
-import atlasConnect, { DisconnectReason, fetchLatestBaileysVersion, downloadContentFromMessage, makeInMemoryStore, jidDecode } from "baileysjs";
+import atlasConnect, { DisconnectReason, fetchLatestBaileysVersion, downloadContentFromMessage, jidDecode } from "@whiskeysockets/baileys";
+import { makeInMemoryStore } from '@rodrigogs/baileys-store'
 import fs from "fs";
 import figlet from "figlet";
 import { join } from "path";
 import got from "got";
 import pino from "pino";
 import path from "path";
-import FileType from "file-type";
+import { fileTypeFromBuffer } from "file-type";
 import { Boom } from "@hapi/boom";
 import { serialize, WAConnection } from "./System/whatsapp.js";
 import { smsg, getBuffer, getSizeMedia } from "./System/Function2.js";
@@ -267,7 +268,7 @@ const startAtlas = async () => {
     for await (const chunk of stream) {
       buffer = Buffer.concat([buffer, chunk]);
     }
-    let type = await FileType.fromBuffer(buffer);
+    let type = await FileType.fileTypeFromBuffer(buffer);
     const trueFileName = attachExtension ? filename + "." + type.ext : filename;
     await fs.promises.writeFile(trueFileName, buffer);
     return trueFileName;
@@ -319,7 +320,7 @@ const startAtlas = async () => {
       ? PATH
       : Buffer.alloc(0);
 
-    let type = (await FileType.fromBuffer(data)) || {
+    let type = (await FileType.fileTypeFromBuffer(data)) || {
       mime: "application/octet-stream",
       ext: ".bin",
     };

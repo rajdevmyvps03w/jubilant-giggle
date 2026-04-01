@@ -1,5 +1,5 @@
 import axios from 'axios';
-import cheerio from 'cheerio';
+import { load } from 'cheerio';
 
 async function pinterest(querry) {
   const { data } = await axios.get(
@@ -11,7 +11,7 @@ async function pinterest(querry) {
       },
     }
   );
-  const $ = cheerio.load(data);
+  const $ = load(data);
   const result = [];
   const fetchedresult = [];
   $('div > a')
@@ -32,7 +32,7 @@ async function wallpaper(title, page = '1') {
   const { data } = await axios.get(
     `https://www.besthdwallpaper.com/search?CurrentPage=${page}&q=${title}`
   );
-  const $ = cheerio.load(data);
+  const $ = load(data);
   const fetchedresult = [];
   $('div.grid-item').each(function (a, b) {
     fetchedresult.push({
@@ -56,7 +56,7 @@ async function wikimedia(title) {
   const res = await axios.get(
     `https://commons.wikimedia.org/w/index.php?search=${title}&title=Special:MediaSearch&go=Go&type=image`
   );
-  const $ = cheerio.load(res.data);
+  const $ = load(res.data);
   const fetchedresult = [];
   $('.sdms-search-results__list-wrapper > div > a').each(function (a, b) {
     fetchedresult.push({
@@ -74,7 +74,7 @@ async function quotesAnime() {
   const { data } = await axios.get(
     'https://otakotaku.com/quote/feed/' + page
   );
-  const $ = cheerio.load(data);
+  const $ = load(data);
   const fetchedresult = [];
   $('div.kotodama-list').each(function (l, h) {
     fetchedresult.push({
@@ -101,7 +101,7 @@ async function aiovideodl(link) {
         'PHPSESSID=69ce1f8034b1567b99297eee2396c308; _ga=GA1.2.1360894709.1632723147; _gid=GA1.2.1782417082.1635161653',
     },
   });
-  const a = cheerio.load(src.data);
+  const a = load(src.data);
   const token = a('#token').attr('value');
   const { data } = await axios({
     url: 'https://aiovideodl.ml/wp-json/aio-dl/video-data/',
@@ -119,7 +119,7 @@ async function aiovideodl(link) {
 
 async function umma(url) {
   const res = await axios.get(url);
-  const $ = cheerio.load(res.data);
+  const $ = load(res.data);
   const image = [];
   $('#article-content > div')
     .find('img')
@@ -153,7 +153,7 @@ async function ringtone(title) {
   const { data } = await axios.get(
     'https://meloboom.com/en/search/' + title
   );
-  const $ = cheerio.load(data);
+  const $ = load(data);
   const fetchedresult = [];
   $(
     '#__next > main > section > div.jsx-2244708474.container > div > div > div > div:nth-child(4) > div > div > div > ul > li'
@@ -171,7 +171,7 @@ async function styletext(teks) {
   const { data } = await axios.get(
     'http://qaz.wtf/u/convert.cgi?text=' + teks
   );
-  const $ = cheerio.load(data);
+  const $ = load(data);
   const fetchedresult = [];
   $('table > tbody > tr').each(function (a, b) {
     fetchedresult.push({
