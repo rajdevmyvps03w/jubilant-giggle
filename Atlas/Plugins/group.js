@@ -1,6 +1,5 @@
 import fs from "fs";
-import * as Jimp from "jimp";
-const JimpLib = Jimp.default || Jimp;
+import Jimp from "jimp";
 import moment from "moment-timezone";
 import {
   setWelcome,
@@ -743,7 +742,7 @@ export default {
 };
 
 async function generatePP(buffer) {
-  const jimp = await JimpLib.read(buffer);
+  const jimp = await Jimp.read(buffer);
   const min = jimp.getWidth();
   const max = jimp.getHeight();
   const cropped = jimp.crop(0, 0, min, max);

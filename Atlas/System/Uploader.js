@@ -1,9 +1,9 @@
 import axios from 'axios';
 import BodyForm from 'form-data';
-import { fileTypeFromBuffer } from 'file-type';
+import { fromBuffer } from 'file-type';
 import fetch from 'node-fetch';
 import fs from 'fs';
-import { load } from 'cheerio';
+import cheerio from 'cheerio';
 
 async function GraphOrg(Path) {
   if (!fs.existsSync(Path)) throw new Error("File not Found");
@@ -44,7 +44,7 @@ async function webp2mp4File(path) {
     data: form,
     headers: { "Content-Type": `multipart/form-data; boundary=${form._boundary}` },
   });
-  const $ = load(firstData);
+  const $ = cheerio.load(firstData);
   const file = $('input[name="file"]').attr("value");
   const bodyFormThen = new BodyForm();
   bodyFormThen.append("file", file);
@@ -57,7 +57,7 @@ async function webp2mp4File(path) {
       "Content-Type": `multipart/form-data; boundary=${bodyFormThen._boundary}`,
     },
   });
-  const $2 = load(secondData);
+  const $2 = cheerio.load(secondData);
   const result =
     "https:" + $2("div#output > p.outfile > video > source").attr("src");
   return { status: true, message: "Created By MRHRTZ", result };

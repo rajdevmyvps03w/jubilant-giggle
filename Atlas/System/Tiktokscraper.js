@@ -1,5 +1,5 @@
 import axios from "axios";
-import { load } from "cheerio";
+import cheerio from "cheerio";
 
 const clean = (data) => {
   let regex = /(<([^>]+)>)/gi;

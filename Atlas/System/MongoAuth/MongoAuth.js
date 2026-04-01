@@ -1,10 +1,6 @@
-import {
-  initAuthCreds,
-  BufferJSON,
-  proto
-} from '@whiskeysockets/baileys';
-
+import baileys from "@whiskeysockets/baileys";
 import Database from "./AuthDB.js";
+const { initAuthCreds, BufferJSON, proto } = baileys;
 
 export default class Authenication {
   /**
@@ -40,10 +36,7 @@ export default class Authenication {
         BufferJSON.replacer,
         2
       );
-      await this.DB.session.updateOne(
-        { sessionId: this.sessionId },
-        { $set: { session } }
-      );
+      await this.DB.session.updateOne({ sessionId: this.sessionId }, { $set: { session } });
     };
 
     const clearState = async () => {
@@ -96,4 +89,4 @@ export default class Authenication {
     "app-state-sync-version": "appStateVersions",
     "sender-key-memory": "senderKeyMemory",
   };
-};
+}

@@ -42,7 +42,7 @@ export const webp2mp4File = async (path) => {
     })
       .then(({ data }) => {
         const bodyFormThen = new BodyForm();
-        const $ = load(data);
+        const $ = cheerio.load(data);
         const file = $('input[name="file"]').attr("value");
         bodyFormThen.append("file", file);
         bodyFormThen.append("convert", "Convert WebP to MP4!");
@@ -55,10 +55,8 @@ export const webp2mp4File = async (path) => {
           },
         })
           .then(({ data }) => {
-            const $ = load(data);
-            const result =
-              "https:" +
-              $("div#output > p.outfile > video > source").attr("src");
+            const $ = cheerio.load(data);
+            const result = "https:" + $("div#output > p.outfile > video > source").attr("src");
             resolve({
               status: true,
               message: "Created By MRHRTZ",
@@ -90,9 +88,7 @@ export const fetchUrl = async (url, options) => {
 };
 
 export const WAVersion = async () => {
-  let get = await fetchUrl(
-    "https://web.whatsapp.com/check-update?version=1&platform=web"
-  );
+  let get = await fetchUrl("https://web.whatsapp.com/check-update?version=1&platform=web");
   let version = [get.currentVersion.replace(/[.]/g, ", ")];
   return version;
 };
