@@ -55,14 +55,20 @@ export default async (Atlas, m, commands, chatUpdate) => {
     const groupAdmin = m.isGroup
       ? participants.filter((v) => v.admin !== null).map((v) => v.id)
       : [];
+    
+    // --- ADMIN ISSUE FIX START ---
     const botNumber = await Atlas.decodeJid(Atlas.user.id);
-    const isBotAdmin = m.isGroup ? groupAdmin.includes(botNumber) : false;
-    const isCreator = [botNumber, ...global.owner]
+    // Multi-device fixed JID matching
+    const botNumberClean = botNumber.split(':')[0] + '@s.whatsapp.net';
+    const isBotAdmin = m.isGroup ? groupAdmin.includes(botNumber) || groupAdmin.includes(botNumberClean) : false;
+    // --- ADMIN ISSUE FIX END ---
+
+    const isCreator = [botNumber, botNumberClean, ...global.owner]
       .map((v) => v.replace(/[^0-9]/g, "") + "@s.whatsapp.net")
       .includes(m.sender);
     const isAdmin = m.isGroup ? groupAdmin.includes(m.sender) : false;
     const messSender = m.sender;
-    const itsMe = messSender.includes(botNumber) ? true : false;
+    const itsMe = messSender.includes(botNumber.split(':')[0]) ? true : false;
 
     const isCmd = body.startsWith(prefix);
     const mime = (quoted.msg || m.msg).mimetype || " ";
