@@ -2,117 +2,132 @@ import { Tiktok } from "../System/Tiktokscraper.js";
 
 let mergedCommands = [
   "tiktok",
+  "tt",
   "tiktokdl",
   "tiktokmp3",
+  "ttmp3",
   "tiktokmp4",
+  "ttmp4",
   "tiktokdoc",
 ];
 
 export default {
   name: "tiktokDl",
   alias: [...mergedCommands],
-  uniquecommands: ["tiktok", "tiktokmp3", "tiktokmp4", "tiktokdoc"],
-  description: "All Tiktok Downloader Commands",
+  uniquecommands: ["tiktok", "tiktokmp3", "tiktokmp4"],
+  description: "Advanced TikTok Downloader",
+
   start: async (
     Atlas,
     m,
-    {
-      inputCMD,
-      text,
-      prefix,
-      doReact,
-      args,
-    }
+    { inputCMD, text, prefix, doReact }
   ) => {
+
     if (!text) {
       await doReact("❌");
-      return m.reply(
-        `Please provide a Tiktok video link !\n\nExample: ${prefix}tiktok <link>`
-      );
+      return m.reply(`🎵 *TikTok Downloader*
+
+📌 Usage:
+• ${prefix}tiktok <link>
+• ${prefix}tiktokmp3 <link>
+• ${prefix}tiktokmp4 <link>`);
     }
+
     if (!text.includes("tiktok")) {
       await doReact("❌");
-      return m.reply("Please provide a valid Tiktok link!");
+      return m.reply("❌ Please provide a valid TikTok link!");
     }
 
-    switch (inputCMD) {
-      case "tiktok":
-      case "tiktokdl": {
-        await doReact("📥");
-        const txtmain = `
-          *『 Tiktok Downloader 』*
+    try {
 
-*🧩 Video Url :* _${text}_\n\n
-*📌 Select the format*
-*${prefix}tiktokmp3 <link>*
-*${prefix}tiktokmp4 <link>*
-*${prefix}tiktokdoc <link>*`;
+      // ================= MAIN MENU =================
+      if (inputCMD === "tiktok" || inputCMD === "tt" || inputCMD === "tiktokdl") {
+        await doReact("🎵");
 
-        Atlas.sendMessage(
-          m.from,
-          { image: { url: botImage1 }, caption: txtmain },
-          { quoted: m }
-        );
-        break;
+        const data = await Tiktok(text);
+
+        let caption = `🎵 *TikTok Downloader*
+
+👤 *Author:* ${data.author}
+📝 *Title:* ${data.title}
+
+📌 *Select Format:*
+• ${prefix}tiktokmp4 ${text}
+• ${prefix}tiktokmp3 ${text}
+`;
+
+        return Atlas.sendMessage(m.from, {
+          image: { url: data.thumbnail },
+          caption
+        }, { quoted: m });
       }
 
-      case "tiktokmp3": {
-        await doReact("📥");
-        try {
-          const data = await Tiktok(args[0]);
-          Atlas.sendMessage(
-            m.from,
-            { audio: { url: data.audio }, mimetype: "audio/mpeg" },
-            { quoted: m }
-          );
-        } catch (e) {
-          await doReact("❌");
-          m.reply(`Failed to download TikTok audio: ${e.message}`);
-        }
-        break;
+      // ================= MP4 =================
+      if (inputCMD === "tiktokmp4" || inputCMD === "ttmp4") {
+        await doReact("🎥");
+
+        const data = await Tiktok(text);
+
+        await Atlas.sendMessage(m.from, {
+          video: { url: data.nowm }, // 🔥 no watermark
+          mimetype: "video/mp4",
+          caption: `🎬 *TikTok Video*
+
+👤 ${data.author}
+📝 ${data.title}
+
+> ${global.botName || "ATLAS"}`
+        }, { quoted: m });
+
+        await doReact("✅");
+        return;
       }
 
-      case "tiktokmp4": {
-        await doReact("📥");
-        try {
-          const data = await Tiktok(args[0]);
-          Atlas.sendMessage(
-            m.from,
-            {
-              video: { url: data.watermark },
-              caption: `Downloaded by: *${botName}*`,
-            },
-            { quoted: m }
-          );
-        } catch (e) {
-          await doReact("❌");
-          m.reply(`Failed to download TikTok video: ${e.message}`);
-        }
-        break;
+      // ================= MP3 =================
+      if (inputCMD === "tiktokmp3" || inputCMD === "ttmp3") {
+        await doReact("🎶");
+
+        const data = await Tiktok(text);
+
+        await Atlas.sendMessage(m.from, {
+          audio: { url: data.audio },
+          mimetype: "audio/mpeg",
+          contextInfo: {
+            externalAdReply: {
+              title: data.title,
+              body: data.author,
+              thumbnailUrl: data.thumbnail,
+              mediaType: 2,
+              renderLargerThumbnail: true
+            }
+          }
+        }, { quoted: m });
+
+        await doReact("✅");
+        return;
       }
 
-      case "tiktokdoc": {
-        await doReact("📥");
-        try {
-          const data = await Tiktok(args[0]);
-          Atlas.sendMessage(
-            m.from,
-            {
-              document: { url: data.audio },
-              mimetype: "audio/mpeg",
-              fileName: `Downloaded by ${botName}.mp3`,
-            },
-            { quoted: m }
-          );
-        } catch (e) {
-          await doReact("❌");
-          m.reply(`Failed to download TikTok document: ${e.message}`);
-        }
-        break;
+      // ================= DOCUMENT =================
+      if (inputCMD === "tiktokdoc") {
+        await doReact("📄");
+
+        const data = await Tiktok(text);
+
+        await Atlas.sendMessage(m.from, {
+          document: { url: data.audio },
+          mimetype: "audio/mpeg",
+          fileName: `${data.title}.mp3`,
+          caption: `📄 TikTok Audio Document`
+        }, { quoted: m });
+
+        await doReact("✅");
+        return;
       }
 
-      default:
-        break;
+    } catch (e) {
+      console.error(e);
+      await doReact("❌");
+      m.reply(`❌ Error: ${e.message}`);
     }
   },
 };
