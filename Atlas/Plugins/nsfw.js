@@ -1,5 +1,9 @@
 import axios from "axios";
-import { checkNSFW } from "../System/MongoDB/MongoDb_Core.js";
+import {
+  checkNSFW,
+  setNSFW,
+  delNSFW
+} from "../System/MongoDB/MongoDb_Core.js";
 
 const NSFW_COMMANDS = {
   animal: "animal",
@@ -61,48 +65,60 @@ const NSFW_COMMANDS = {
 
 export default {
   name: "nsfw",
-  alias: Object.keys(NSFW_COMMANDS),
-  description: "High Qualit NSFW Images",
+  alias: ["nsfw", ...Object.keys(NSFW_COMMANDS)],
+  description: "High Quality NSFW Images",
 
-  start: async (Atlas, m, { prefix, inputCMD }) => {
+  start: async (Atlas, m, { prefix, inputCMD, args, isAdmin }) => {
+    
+    if (inputCMD === "nsfw") {
+      if (!m.isGroup) return m.reply("Group only ❌");
+      if (!isAdmin) return m.reply("Admin only ❌");
+      if (!args[0]) {
+        return m.reply(
+          `Use:\n\n${prefix}nsfw on\n${prefix}nsfw off`
+        );
+      }
+      if (args[0] === "on") {
+        await setNSFW(m.from);
+        return m.reply("NSFW Enabled ✅");
+      }
+      if (args[0] === "off") {
+        await delNSFW(m.from);
+        return m.reply("NSFW Disabled ❌");
+      }
+    }
     if (m.isGroup) {
       const nsfw = await checkNSFW(m.from);
-
       if (!nsfw) {
         return m.reply(
           `NSFW disabled ❌\n\nEnable using:\n*${prefix}nsfw on*`
         );
       }
     }
-
+    const endpoint = NSFW_COMMANDS[inputCMD];
+    if (!endpoint) return;
     try {
-      // command check
-      const endpoint = NSFW_COMMANDS[inputCMD];
-
-      if (!endpoint) {
-        return m.reply("Invalid NSFW command ❌");
-      }
-
-      // loading
       await m.reply("Fetching... 🔞");
-
-      // api call
       const res = await axios.get(
         `https://stenx-apis.vercel.app/api/nsfw/${endpoint}`
       );
-      const img = res.data.url;
+      if (!res.data || !res.data.url) {
+        return m.reply("API failed ❌");
+      }
+      const img = await axios.get(res.data.url, {
+        responseType: "arraybuffer",
+      });
       await Atlas.sendMessage(
         m.from,
         {
-          image: { url: img },
-          caption: `🔞 NSFW: ${endpoint}`
+          image: Buffer.from(img.data),
+          caption: `🔞 NSFW: ${endpoint}`,
         },
         { quoted: m }
       );
-
-    } catch (e) {
-      console.log(e);
-      m.reply("Error fetching NSFW ❌");
+    } catch (err) {
+      console.log("NSFW ERROR:", err.message);
+      m.reply("Failed to fetch image ❌");
     }
   },
 };
