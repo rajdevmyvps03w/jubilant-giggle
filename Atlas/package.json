@@ -61,7 +61,6 @@
     "moment-timezone": "^0.6.1",
     "mongoose": "^9.3.3",
     "mumaker": "^2.0.0",
-    "node-fetch": "^3.3.2",
     "node-id3": "^0.2.9",
     "openai": "^6.33.0",
     "path": "^0.12.7",
@@ -79,6 +78,9 @@
     "youtube-yts": "^2.0.0",
     "youtubedl-core": "^4.11.7",
     "z-anime": "^1.1.3"
+  },
+  "overrides": {
+    "simple-xml-to-json": "1.2.3"
   },
   "devDependencies": {
     "jimp": "^1.6.0",
