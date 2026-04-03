@@ -382,6 +382,54 @@ async function unbanGroup(groupID) {
   _setGroup(groupID, { bangroup: false });
 }
 
+// SET NSFW
+async function setNSFW(groupID) {
+  const group = await groupData.findOne({ id: groupID });
+
+  if (!group) {
+    await groupData.create({ id: groupID, nsfw: true });
+  } else if (!group.nsfw) {
+    await groupData.findOneAndUpdate(
+      { id: groupID },
+      { $set: { nsfw: true } }
+    );
+  }
+
+  _setGroup(groupID, { nsfw: true });
+}
+
+// CHECK NSFW
+async function checkNSFW(groupID) {
+  const cached = _getGroup(groupID);
+  if (cached?.nsfw !== undefined) return cached.nsfw;
+
+  const group = await groupData.findOne({ id: groupID });
+
+  if (!group) {
+    _setGroup(groupID, { nsfw: false });
+    return false;
+  }
+
+  _setGroup(groupID, { nsfw: group.nsfw });
+  return group.nsfw;
+}
+
+// DISABLE NSFW
+async function delNSFW(groupID) {
+  const group = await groupData.findOne({ id: groupID });
+
+  if (!group) {
+    await groupData.create({ id: groupID, nsfw: false });
+  } else if (group.nsfw) {
+    await groupData.findOneAndUpdate(
+      { id: groupID },
+      { $set: { nsfw: false } }
+    );
+  }
+
+  _setGroup(groupID, { nsfw: false });
+}
+
 // ─── Plugin Functions ─────────────────────────────────────────────────────────
 
 // PUSH NEW INSTALLED PLUGIN IN DATABASE
@@ -461,8 +509,11 @@ export {
   banGroup,           // BAN GROUP
   checkBanGroup,      // CHECK BAN STATUS OF A GROUP
   unbanGroup,         // UNBAN GROUP
+  setNSFW,            // ENABLE NSFW MODE
+  checkNSFW,          // CHECK NSFW STATUS
+  delNSFW,            // DISABLE NSFW MODE
   getPluginURLs,      // GET ALL INSTALLED PLUGIN URLs
-  getAllPlugins,       // GET ALL INSTALLED PLUGINS
+  getAllPlugins,      // GET ALL INSTALLED PLUGINS
   clearUserCache,     // CLEAR USER CACHE (userId or all)
   clearGroupCache,    // CLEAR GROUP CACHE (groupId or all)
   clearSystemCache,   // CLEAR SYSTEM CACHE
