@@ -1,0 +1,228 @@
+name: Yasmin
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+
+concurrency:
+  group: marin-vps
+  cancel-in-progress: true
+
+permissions:
+  actions: write
+  contents: write
+
+env:
+  TZ: 'Asia/Kolkata'
+
+jobs:
+  ultimate-vps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 200
+
+    steps:
+    - name: 📂 Checkout Code
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.PAT_TOKEN }}
+        fetch-depth: 0
+
+    - name: 🟢 Setup Node.js 22
+      uses: actions/setup-node@v3
+      with:
+        node-version: '22'
+
+    - name: 🥟 Setup Bun Runtime
+      uses: oven-sh/setup-bun@v1
+      with:
+        bun-version: latest
+
+    - name: 🧹 System Cleanup & Install Pro Tools
+      run: |
+        echo "🧹 Clearing Disk Space..."
+        sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost /usr/local/lib/android /opt/hostedtoolcache/CodeQL
+        sudo docker image prune --all --force
+    
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq ffmpeg imagemagick webp jq tmate neofetch ttyd btop python3 python3-pip
+        
+        # --- 📥 YT-DLP + JS RUNTIME FIX ---
+        sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+        sudo chmod a+rx /usr/local/bin/yt-dlp
+        
+        # Install Deno (yt-dlp preferred JS runtime)
+        curl -fsSL https://deno.land/install.sh | sh
+        sudo ln -s /home/runner/.deno/bin/deno /usr/local/bin/deno
+
+    - name: 🍪 Create Cookies File
+      run: |
+        echo "${{ secrets.YT_COOKIES }}" > cookies.txt
+        # Isse file main root folder mein ban jayegi
+        
+        # 🛡️ INSTALL & DEEP CLEAN JUNK (Code 2 logic)
+        wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+        sudo dpkg -i cloudflared-linux-amd64.deb
+        
+        # Ye command bot folder ke andar se bhi installer ko uda degi
+        find . -name "cloudflared-linux-amd64.deb" -type f -delete
+        
+        sudo npm install -g pm2
+        curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh | sudo bash
+        ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
+
+    - name: 💾 Setup Ghost Auto-Save (savecode)
+      run: |
+        git config --global user.email "marin-bot@auto.sync"
+        git config --global user.name "Marin Auto-Saver"
+        git remote set-url origin https://${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git
+        
+        echo "**/node_modules/" >> .gitignore
+        echo "**/*.log" >> .gitignore
+        echo "filebrowser.db" >> .gitignore
+        
+        mv .github /tmp/.github_hidden
+        
+        echo '#!/bin/bash' > savecode
+        echo 'echo "⏳ Saving ALL BOTS to GitHub..."' >> savecode
+        echo 'mv /tmp/.github_hidden ./.github' >> savecode 
+        echo 'git add .' >> savecode
+        echo 'git commit -m "💾 Auto-saved Multi-Bot Empire [skip ci]" || echo "No changes to save."' >> savecode
+        echo 'git push origin HEAD || echo "⚠️ Push failed! Check PAT_TOKEN."' >> savecode
+        echo 'mv ./.github /tmp/.github_hidden' >> savecode 
+        echo 'echo "✅ Save Process Completed for all bots!"' >> savecode
+        
+        sudo mv savecode /usr/local/bin/savecode
+        sudo chmod +x /usr/local/bin/savecode
+
+    - name: 🔒 Set SSH Password
+      run: |
+        echo "runner:${{ secrets.SSH_PASSWORD }}" | sudo chpasswd
+        sudo usermod -aG sudo runner
+
+    # --- 🚀 ADVANCED MULTI-BOT ENGINE ---
+    - name: 🚀 Auto-Detect & Start All Bots (PM2)
+      env:
+        MONGODB: ${{ secrets.MONGODB }}
+        MODS: ${{ secrets.MODS }}
+        SESSION_ID: ${{ secrets.SESSION_ID }}
+        PACKNAME: ${{ secrets.PACKNAME }}
+      run: |
+        echo "🔍 Scanning for Bot Folders..."
+        BOT_LIST=""
+        
+        for dir in */ ; do
+          if [ -d "$dir" ] && [ -f "$dir/package.json" ]; then
+            BOT_NAME=$(basename "$dir")
+            
+            if [ -z "$BOT_LIST" ]; then
+              BOT_LIST="$BOT_NAME"
+            else
+              BOT_LIST="$BOT_LIST, $BOT_NAME"
+            fi
+            
+            echo "⚙️ Initializing Bot: $BOT_NAME"
+            cd "$dir"
+            
+            # Use Bun for installation if specified in package.json engines
+            if grep -q '"bun":' package.json; then
+              echo "🥟 Bun detected, installing with Bun..."
+              bun install
+              
+              # Start with smol engine if it is a main.js project
+              if [ -f "src/main.js" ]; then
+                pm2 start "bun run --smol src/main.js" --name "$BOT_NAME"
+              else
+                pm2 start "bun start" --name "$BOT_NAME"
+              fi
+            else
+              echo "🟢 Node detected, installing with NPM..."
+              npm install
+              if [ -f "index.js" ]; then
+                pm2 start index.js --name "$BOT_NAME"
+              else
+                pm2 start npm --name "$BOT_NAME" -- start
+              fi
+            fi
+            cd ..
+          fi
+        done
+        pm2 save
+        echo "ACTIVE_BOTS=${BOT_LIST:-'No bots found!'}" >> $GITHUB_ENV
+
+    # --- 🌐 OPEN WEB PANELS SETUP (Code 2 Stability) ---
+    - name: 🌐 Start Open Web Panels & Btop
+      run: |
+        set +e 
+        
+        # 🛡️ ULTRA STABLE STARTUP: No complex hide flags to prevent 502
+        # DB is in /tmp so it won't show in your folders
+        filebrowser -a 0.0.0.0 -p 8080 -r . --noauth -d /tmp/filebrowser.db > /tmp/filebrowser.log 2>&1 &
+        
+        ttyd -R -p 61208 btop > /tmp/btop.log 2>&1 &
+        
+        # Give services enough time to breathe
+        sleep 20
+        
+        cloudflared tunnel --url http://127.0.0.1:8080 > /tmp/cf_file.log 2>&1 &
+        cloudflared tunnel --url http://127.0.0.1:61208 > /tmp/cf_btop.log 2>&1 &
+        
+        # Extra time for tunnel mapping
+        sleep 30
+        
+        FILE_URL=$(grep -o 'https://[-a-zA-Z0-9]*\.trycloudflare\.com' /tmp/cf_file.log | head -n 1)
+        BTOP_URL=$(grep -o 'https://[-a-zA-Z0-9]*\.trycloudflare\.com' /tmp/cf_btop.log | head -n 1)
+        
+        echo "FILE_MANAGER_URL=${FILE_URL:-'⚠️ Wait & Refresh'}" >> $GITHUB_ENV
+        echo "BTOP_URL=${BTOP_URL:-'⚠️ Wait & Refresh'}" >> $GITHUB_ENV
+
+    # --- 🔄 TMATE SSH & OPEN ALERT ---
+    - name: 🔄 Start Tmate Loop & Discord Alert
+      env:
+        DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+      run: |
+        set +e 
+        
+        for i in {1..15}; do
+           tmate -S /tmp/tmate.sock kill-session 2>/dev/null || true
+           tmate -S /tmp/tmate.sock new-session -d
+           tmate -S /tmp/tmate.sock wait tmate-ready
+           sleep 5
+           
+           SSH_MSG=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}' 2>/dev/null)
+           
+           if [[ "$SSH_MSG" == *"tmate.io"* ]]; then
+              
+              PAYLOAD=$(jq -n \
+                --arg ssh "$SSH_MSG" \
+                --arg fileUrl "$FILE_MANAGER_URL" \
+                --arg btopUrl "$BTOP_URL" \
+                --arg bots "$ACTIVE_BOTS" \
+                '{content: "✨ 🎀 **VPS 𝐃𝐚𝐬𝐡𝐛𝐨𝐚𝐫𝐝** 🎀 ✨\n\n✅ **𝐒𝐭𝐚𝐭𝐮𝐬:** `Online` 🟢\n🤖 **𝐀𝐜𝐭𝐢𝐯𝐞 𝐁𝐨𝐭𝐬:** `\($bots)`\n\n📂 **𝐅𝐢𝐥𝐞 𝐌𝐚𝐧𝐚𝐠𝐞𝐫:** \($fileUrl)\n📊 **𝐕𝐏𝐒 𝐇𝐞𝐚𝐥𝐭𝐡:** \($btopUrl)\n💻 **𝐒𝐒𝐇 𝐓𝐞𝐫𝐦𝐢𝐧𝐚𝐥:** `\($ssh)`\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n🛠️ **𝐕𝐏𝐒 𝐌𝐀𝐍𝐀𝐆𝐄𝐌𝐄𝐍𝐓 𝐆𝐔𝐈𝐃𝐄** 🛠️\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💾 **𝐒𝐚𝐯𝐞 𝐂𝐡𝐚𝐧𝐠𝐞𝐬:** `savecode` \n_(⚠ Required before session ends to save data to GitHub!)_\n\n📦 **𝐔𝐧𝐳𝐢𝐩 𝐁𝐨𝐭:** `unzip \"filename.zip\"` \n_(Use this to extract your uploaded bot files)_\n\n🗑️ **𝐂lean 𝐉𝐮𝐧𝐤:** `rm \"filename.zip\"` \n_(Always delete zip files after unzip to save space)_\n\n📝 **𝐕𝐢𝐞𝐰 𝐋𝐨𝐠𝐬:** `pm2 logs Name` \n_(Check QR code or bot errors live)_\n\n🔄 **𝐑𝐞𝐬𝐭𝐚𝐫𝐭:** `pm2 restart Name` \n_(Apply new code changes immediately)_\n\n🛑 **𝐒𝐭𝐨𝐩 𝐁𝐨𝐭:** `pm2 stop Name` \n_(To turn off a specific bot)_\n\n📈 **𝐒𝐭𝐚𝐭𝐮𝐬:** `pm2 status` \n_(To see all running bots list)_\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n✨ **💡 𝐓𝐢𝐩:** _If  You Have Any Issue Connect With Owner https://wa.me/918434573266 !_ "}')
+              
+              curl -H "Content-Type: application/json" -d "$PAYLOAD" $DISCORD_WEBHOOK
+              
+              echo "RESTART_SAFE=true" >> $GITHUB_ENV
+              
+              for m in {1..36}; do sleep 300; done
+              
+              savecode || true
+              exit 0
+           fi
+           sleep 5
+        done
+        
+        curl -H "Content-Type: application/json" -d '{"content": "❌ **ERROR:** Tmate Server failed. Auto-restart paused."}' $DISCORD_WEBHOOK
+        exit 1
+
+    - name: 🧟 Respawn Zombie
+      if: env.RESTART_SAFE == 'true'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.PAT_TOKEN }}
+        script: |
+          await github.rest.actions.createWorkflowDispatch({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            workflow_id: 'marin.yml',
+            ref: 'main'
+          })
