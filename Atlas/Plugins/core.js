@@ -68,44 +68,14 @@ export default {
             if (stat.isDirectory()) {
               const subCommands = await readUniqueCommands(filePath);
               allCommands.push(...subCommands);
-            } else if (stat.isFile() && file.endsWith(".js")) {let cmdDefault;
+            } else if (stat.isFile() && file.endsWith(".js")) {
+              const command = await import(pathToFileURL(filePath).href);
+              const cmdDefault = command.default;
 
-try {
-  const command = await import(
-    pathToFileURL(filePath).href + `?update=${Date.now()}`
-  );
-
-  console.log("LOADING:", file); // debug
-
-  cmdDefault = command.default;
-
-} catch (err) {
-  console.log("PLUGIN LOAD FAILED:", file, err.message);
-  continue; // skip broken plugin
-}
-              
-if (cmdDefault) {
-  let commands = [];
-
-  try {
-    if (Array.isArray(cmdDefault.uniquecommands)) {
-      commands = cmdDefault.uniquecommands;
-    } else if (Array.isArray(cmdDefault.alias)) {
-      commands = cmdDefault.alias;
-    } else if (cmdDefault.name) {
-      commands = [cmdDefault.name];
-    }
-
-    if (commands.length > 0) {
-      const subArray = [file, ...commands];
-      allCommands.push(subArray);
-    }
-
-  } catch (err) {
-    console.log("MENU LOAD ERROR:", file, err.message);
-  }
-}
-              
+              if (cmdDefault && Array.isArray(cmdDefault.uniquecommands)) {
+                const subArray = [file, ...cmdDefault.uniquecommands];
+                allCommands.push(subArray);
+              }
             }
           }
 
