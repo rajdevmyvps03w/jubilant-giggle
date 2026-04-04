@@ -32,15 +32,12 @@ export default {
         );
         let repo = repoInfo.data;
         console.log(repo);
-        let txt = `            🧣 *${botName}'s Script* 🧣\n\n*🎀 Total Forks:* ${
-          repo.forks_count
-        }\n*⭐ Total Stars:* ${repo.stargazers_count}\n*📜 License:* ${
-          repo.license.name
-        }\n*📁 Repo Size:* ${(repo.size / 1024).toFixed(
-          2,
-        )} MB\n*📅 Last Updated:* ${repo.updated_at}\n\n*🔗 Repo Link:* ${
-          repo.html_url
-        }\n\n❝ Dont forget to give a Star ⭐ to the repo. It's made with restless hardwork by *Team ATLAS*. ❞\n\n*©️ Team ATLAS- 2023*`;
+        let txt = `            🧣 *${botName}'s Script* 🧣\n\n*🎀 Total Forks:* ${repo.forks_count
+          }\n*⭐ Total Stars:* ${repo.stargazers_count}\n*📜 License:* ${repo.license.name
+          }\n*📁 Repo Size:* ${(repo.size / 1024).toFixed(
+            2,
+          )} MB\n*📅 Last Updated:* ${repo.updated_at}\n\n*🔗 Repo Link:* ${repo.html_url
+          }\n\n❝ Dont forget to give a Star ⭐ to the repo. It's made with restless hardwork by *Team ATLAS*. ❞\n\n*©️ Team ATLAS- 2023*`;
         Atlas.sendMessage(m.from, { image: pic, caption: txt }, { quoted: m });
         break;
 
@@ -69,13 +66,44 @@ export default {
               const subCommands = await readUniqueCommands(filePath);
               allCommands.push(...subCommands);
             } else if (stat.isFile() && file.endsWith(".js")) {
-              const command = await import(pathToFileURL(filePath).href);
-              const cmdDefault = command.default;
+              let cmdDefault;
 
-              if (cmdDefault && Array.isArray(cmdDefault.uniquecommands)) {
-                const subArray = [file, ...cmdDefault.uniquecommands];
-                allCommands.push(subArray);
+              try {
+                const command = await import(
+                  pathToFileURL(filePath).href + `?update=${Date.now()}`
+                );
+
+                console.log("LOADING:", file);
+
+                cmdDefault = command.default;
+
+              } catch (err) {
+                console.log("PLUGIN LOAD FAILED:", file, err.message);
+                continue;
               }
+
+              if (cmdDefault) {
+                let commands = [];
+
+                try {
+                  if (Array.isArray(cmdDefault.uniquecommands)) {
+                    commands = cmdDefault.uniquecommands;
+                  } else if (Array.isArray(cmdDefault.alias)) {
+                    commands = cmdDefault.alias;
+                  } else if (cmdDefault.name) {
+                    commands = [cmdDefault.name];
+                  }
+
+                  if (commands.length > 0) {
+                    const subArray = [file, ...commands];
+                    allCommands.push(subArray);
+                  }
+
+                } catch (err) {
+                  console.log("MENU LOAD ERROR:", file, err.message);
+                }
+              }
+
             }
           }
 
